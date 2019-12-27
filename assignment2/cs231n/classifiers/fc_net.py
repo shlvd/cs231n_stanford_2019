@@ -49,7 +49,10 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        self.params['W1'] = np.random.normal(loc=0.0, scale=weight_scale, size=(input_dim, hidden_dim))
+        self.params['W2'] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dim, num_classes))
+        self.params['b1'] = np.zeros((hidden_dim, ))
+        self.params['b2'] = np.zeros((num_classes, ))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -83,7 +86,8 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        hidden, hidden_cache = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+        scores, scores_cache = affine_forward(hidden, self.params['W2'], self.params['b2'])
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -94,7 +98,7 @@ class TwoLayerNet(object):
         if y is None:
             return scores
 
-        loss, grads = 0, {}
+        loss, grads = 0, {} 
         ############################################################################
         # TODO: Implement the backward pass for the two-layer net. Store the loss  #
         # in the loss variable and gradients in the grads dictionary. Compute data #
@@ -107,14 +111,20 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dsoftmax = softmax_loss(scores, y)
+        loss += 0.5*self.reg*(np.sum(self.params['W1']*(self.params['W1'])) + np.sum(self.params['W2']*(self.params['W2'])))
+        
+        dx2, grads['W2'], grads['b2'] = affine_backward(dsoftmax, scores_cache)
+        dx1, grads['W1'], grads['b1'] = affine_relu_backward(dx2, hidden_cache)
 
+        grads['W1'] += self.reg*self.params['W1']
+        grads['W2'] += self.reg*self.params['W2'] 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
-        return loss, grads
+        return loss, grads 
 
 
 class FullyConnectedNet(object):
@@ -177,8 +187,14 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        self.params['W1'] = np.random.normal(loc=0.0, scale=weight_scale, size=(input_dim, hidden_dims[0]))
+        self.params['b1'] = np.zeros((hidden_dims[0], ))
+        for i in range(1, self.num_layers - 1):
+            self.params['W' + str(i+1)] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dims[i-1], hidden_dims[i]))
+            self.params['b' + str(i+1)] = np.zeros((hidden_dims[i], ))
+        self.params['W' + str(self.num_layers)] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dims[-1], num_classes))    
+        self.params['b' + str(self.num_layers)] = np.zeros((num_classes, ))    
+            
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -240,9 +256,12 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
+        hidden, cache_hidden = {}, {}
+        hidden[1], cache_hidden[1] = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+        for i in range(1, self.num_layers - 1):
+            hidden[i+1], cache_hidden[i+1] = affine_relu_forward(hidden[i], self.params['W' + str(i+1)], self.params['b' + str(i+1)])
+        hidden[self.num_layers], cache_hidden[self.num_layers] = affine_forward(hidden[self.num_layers-1], self.params['W' + str(self.num_layers)], self.params['b' + str(self.num_layers)])
+        scores, scores_cache = hidden[self.num_layers], cache_hidden[self.num_layers]
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -268,11 +287,24 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        loss, dsoftmax = softmax_loss(scores, y)
+        dx_grad = {}
+        for i in range(self.num_layers):
+            loss += 0.5*self.reg*np.sum(self.params['W' + str(i+1)]*(self.params['W' + str(i+1)]))
+        
+        dx_grad[self.num_layers], grads['W' + str(self.num_layers)], grads['b' + str(self.num_layers)] = affine_backward(dsoftmax, scores_cache)
+        for i in range(self.num_layers, 1, -1):
+            dx_grad[i-1], grads['W' + str(i-1)], grads['b' + str(i-1)] = affine_relu_backward(dx_grad[i], cache_hidden[i-1])
+             
+        for i in range(self.num_layers):
+            grads['W' + str(i+1)] += self.reg*self.params['W' + str(i+1)]        
+        
+        
+        
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
-        return loss, grads
+        return loss, grads 
