@@ -426,7 +426,7 @@ def layernorm_backward(dout, cache):
     dmu = - dx_normed.sum(axis=1, keepdims=True) / std
     dvar = - (dx_normed * x_normed).sum(axis=1, keepdims=True) / (sample_var + eps) / 2
     d = dout.shape[1]
-    dx = dx_normed / std + dmu / d + x_normed * std * grad_var * 2 / d
+    dx = dx_normed / std + dmu / d + x_normed * std * dvar * 2 / d
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
