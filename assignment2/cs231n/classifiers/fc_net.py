@@ -341,7 +341,7 @@ class FullyConnectedNet(object):
                 grads['beta' + str(i)] = grad_beta
 
             # backward pass through current affine layer
-            grad_current_x, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(grad_current_x, cache_hidden['affine' str(i+1)])
+            grad_current_x, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(grad_current_x, cache_hidden['affine' + str(i+1)])
             
         
         for i in range(self.num_layers):
