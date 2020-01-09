@@ -236,10 +236,8 @@ def load_models(models_dir):
 
 def load_imagenet_val(num=None):
     """Load a handful of validation images from ImageNet.
-
     Inputs:
     - num: Number of images to load (max of 25)
-
     Returns:
     - X: numpy array with shape [num, 224, 224, 3]
     - y: numpy array of integer image labels, shape [num]
@@ -252,11 +250,11 @@ def load_imagenet_val(num=None):
       print('cd cs231n/datasets')
       print('bash get_imagenet_val.sh')
       assert False, 'Need to download imagenet_val_25.npz'
-    f = np.load(imagenet_fn)
+    f = np.load(imagenet_fn, allow_pickle=True)
     X = f['X']
     y = f['y']
     class_names = f['label_map'].item()
     if num is not None:
         X = X[:num]
         y = y[:num]
-    return X, y, class_names
+    return X, y, class_names 
